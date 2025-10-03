@@ -1,30 +1,34 @@
-# GoogleAcademico
+# GoogleAcademico - Semantic Scholar API
 
-Web scraper para buscar información de artículos científicos en Google Scholar.
+Herramienta para buscar información de artículos científicos usando la API oficial de Semantic Scholar.
 
 ## Descripción
 
-Este proyecto proporciona una herramienta de web scraping para extraer información de artículos científicos desde Google Scholar (Google Académico). Permite buscar artículos, filtrar por autor, título y obtener información relevante como citaciones, autores, enlaces y resúmenes.
+Este proyecto proporciona una interfaz fácil de usar para buscar y exportar información de artículos científicos desde Semantic Scholar. Incluye filtrado por años, múltiples tipos de búsqueda y exportación automática a CSV.
 
 ## Características
 
 - 🔍 Búsqueda de artículos científicos por términos generales
-- 👤 Búsqueda de artículos por autor específico
-- 📄 Búsqueda de artículos por título
-- 📊 Extracción de información relevante:
-  - Título del artículo
-  - Enlace al artículo
-  - Autores y publicación
-  - Resumen
+- 👤 Búsqueda de artículos por autor específico  
+- 📄 Búsqueda de artículos por título exacto
+- 📅 **NUEVO**: Filtrado por rango de años (ej: 2020-2024)
+- 📊 Extracción completa de información:
+  - Título y resumen del artículo
+  - Lista completa de autores
+  - Año de publicación y fecha exacta
   - Número de citaciones
-  - Versiones disponibles
+  - URL del artículo
+  - Venue (revista/conferencia)
+  - Campos de estudio
+  - Tipos de publicación
+- 💾 **Exportación automática a CSV** con separador "|" 
+- 🚀 **Sin bloqueos**: Usa API oficial (no web scraping)
 
 ## Requisitos
 
-- Python 3.6 o superior
-- beautifulsoup4
+- Python 3.7 o superior
 - requests
-- lxml
+- typing_extensions
 
 ## Instalación
 
@@ -41,148 +45,172 @@ pip install -r requirements.txt
 
 ## Uso
 
-### Uso Básico
+### Uso Principal (Interactivo)
+
+```bash
+python semantic_scholar_main.py
+```
+
+### Uso Programático
 
 ```python
-from google_academico import GoogleScholarScraper, imprimir_articulos
+from semantic_scholar_api import SemanticScholarAPI
 
-# Crear instancia del scraper
-scraper = GoogleScholarScraper()
+# Crear instancia de la API
+api = SemanticScholarAPI()
 
-# Buscar artículos
-articulos = scraper.buscar_articulos("machine learning", num_resultados=10)
+# Buscar artículos (con filtro de años opcional)
+articulos = api.buscar_articulos("machine learning", num_resultados=10, año_desde=2020, año_hasta=2024)
 
-# Mostrar resultados
-imprimir_articulos(articulos)
+# Los resultados se guardan automáticamente en CSV
 ```
 
 ### Búsqueda por Autor
 
 ```python
-from google_academico import GoogleScholarScraper
-
-scraper = GoogleScholarScraper()
-
 # Buscar artículos de un autor específico
-articulos = scraper.buscar_por_autor("Andrew Ng", num_resultados=5)
+articulos = api.buscar_por_autor("Geoffrey Hinton", num_resultados=5, año_desde=2020)
 
-for articulo in articulos:
-    print(f"Título: {articulo['titulo']}")
-    print(f"Autores: {articulo['autores_info']}")
-    print(f"Citado por: {articulo['citado_por']}")
-    print("-" * 80)
+# Ver algunos resultados
+for articulo in articulos[:3]:
+    print(f"Título: {articulo['title']}")
+    print(f"Año: {articulo['year']}")  
+    print(f"Citaciones: {articulo['citationCount']}")
+    print("-" * 50)
 ```
 
 ### Búsqueda por Título
 
 ```python
-from google_academico import GoogleScholarScraper
-
-scraper = GoogleScholarScraper()
-
-# Buscar artículos con un título específico
-articulos = scraper.buscar_por_titulo("deep learning", num_resultados=5)
+# Buscar artículos con título específico
+articulos = api.buscar_por_titulo("Attention Is All You Need")
 ```
 
-### Ejemplo Completo
-
-Ejecuta el script de ejemplo incluido:
+### Ejemplos Completos
 
 ```bash
-python ejemplo.py
+python ejemplo_semantic_scholar.py
 ```
 
 ## Estructura del Proyecto
 
 ```
 GoogleAcademico/
-├── README.md              # Este archivo
-├── requirements.txt       # Dependencias del proyecto
-├── google_academico.py    # Módulo principal del scraper
-└── ejemplo.py            # Script de ejemplo
+├── README.md                    # Este archivo  
+├── requirements.txt             # Dependencias actualizadas
+├── semantic_scholar_main.py     # Script principal interactivo
+├── semantic_scholar_api.py      # Módulo API de Semantic Scholar
+├── ejemplo_semantic_scholar.py  # Script de ejemplos
+└── legacy/                      # Archivos obsoletos del scraper web
 ```
+
+## Archivos de Salida
+
+Los resultados se exportan automáticamente a archivos CSV con formato:
+- **Separador**: `|` (pipe)
+- **Codificación**: UTF-8
+- **Nombres**: `semantic_scholar_[tipo]_[query]_[fecha]_[hora].csv`
+
+### Columnas del CSV:
+1. paperId - ID único del artículo
+2. title - Título
+3. abstract - Resumen
+4. authors - Lista de autores  
+5. year - Año de publicación
+6. citationCount - Número de citaciones
+7. url - Enlace al artículo
+8. venue - Revista/Conferencia
+9. publicationDate - Fecha completa
+10. publicationTypes - Tipos de publicación
+11. fieldsOfStudy - Campos de estudio
+
+## Filtrado por Años
+
+El sistema permite filtrar por rango de años en todos los tipos de búsqueda:
+
+- **Rango completo**: 2020-2024
+- **Solo desde**: 2022 (desde 2022 hasta ahora)  
+- **Solo hasta**: -2020 (hasta 2020)
 
 ## API Reference
 
-### Clase GoogleScholarScraper
+### Clase SemanticScholarAPI
 
-#### `__init__(user_agent=None)`
-Inicializa el scraper con un user agent opcional.
+#### `buscar_articulos(query, num_resultados=10, año_desde=None, año_hasta=None)`
+Busca artículos por términos generales.
 
-#### `buscar_articulos(query, num_resultados=10, delay=2)`
-Busca artículos científicos en Google Scholar.
-
-**Parámetros:**
-- `query` (str): Término de búsqueda
-- `num_resultados` (int): Número de resultados a retornar (default: 10)
-- `delay` (int): Tiempo de espera entre peticiones en segundos (default: 2)
-
-**Retorna:**
-- Lista de diccionarios con información de los artículos
-
-#### `buscar_por_autor(autor, num_resultados=10)`
+#### `buscar_por_autor(autor, num_resultados=10, año_desde=None, año_hasta=None)`  
 Busca artículos de un autor específico.
 
-**Parámetros:**
-- `autor` (str): Nombre del autor
-- `num_resultados` (int): Número de resultados a retornar
-
-#### `buscar_por_titulo(titulo, num_resultados=10)`
-Busca artículos por título específico.
-
-**Parámetros:**
-- `titulo` (str): Título del artículo
-- `num_resultados` (int): Número de resultados a retornar
-
-### Función imprimir_articulos
-
-```python
-imprimir_articulos(articulos)
-```
-
-Función auxiliar para imprimir artículos de forma legible.
+#### `buscar_por_titulo(titulo, num_resultados=10, año_desde=None, año_hasta=None)`
+Busca artículos por título exacto.
 
 ## Estructura de Datos
 
-Cada artículo retornado es un diccionario con la siguiente estructura:
-
 ```python
 {
-    'titulo': 'Título del artículo',
-    'enlace': 'https://...',
-    'autores_info': 'Autores - Publicación - Año',
-    'resumen': 'Resumen del artículo...',
-    'citado_por': 'Citado por X',
-    'versiones': 'Todas las X versiones'
+    'paperId': 'ID único del artículo',
+    'title': 'Título del artículo', 
+    'abstract': 'Resumen completo...',
+    'authors': ['Autor1', 'Autor2'],
+    'year': 2024,
+    'citationCount': 156,
+    'url': 'https://...',
+    'venue': 'Nombre de la revista/conferencia',
+    'publicationDate': '2024-03-15',
+    'publicationTypes': ['JournalArticle'],
+    'fieldsOfStudy': ['Computer Science', 'Medicine']
 }
 ```
 
 ## Consideraciones Importantes
 
-- ⚠️ **Rate Limiting**: Google Scholar puede bloquear IPs que hacen demasiadas peticiones. El scraper incluye delays entre peticiones para minimizar este riesgo.
-- 🔒 **Uso Responsable**: Este scraper es para uso educativo y de investigación. Respeta los términos de servicio de Google Scholar.
-- 🌐 **User Agent**: El scraper usa un user agent genérico. Puedes personalizarlo si lo necesitas.
-- 📡 **Conexión a Internet**: Se requiere conexión a internet activa para realizar las búsquedas.
+- ✅ **API Oficial**: Usa la API oficial de Semantic Scholar, sin riesgo de bloqueos
+- 🚀 **Rate Limiting Automático**: 1 request/segundo sin clave API, 100 req/s con clave
+- � **Datos Completos**: Acceso a toda la información bibliográfica disponible
+- 💾 **Exportación Automática**: Los resultados se guardan automáticamente en CSV
+- 📡 **Conexión a Internet**: Se requiere conexión activa para acceder a la API
+
+## API Key (Opcional)
+
+Para mayor velocidad, puedes obtener una clave API gratuita en:
+[Semantic Scholar API](https://www.semanticscholar.org/product/api)
+
+```python
+api = SemanticScholarAPI(api_key="tu_clave_api_aqui")
+```
 
 ## Solución de Problemas
 
+### Error 429 (Rate Limit)
+- Normal sin API key (1 req/segundo máximo)
+- Obtén una API key para mayor velocidad
+- El sistema maneja automáticamente los límites
+
+### No se encuentran resultados  
+- Verifica la ortografía de los términos de búsqueda
+- Prueba con sinónimos o términos relacionados
+- Algunos campos muy específicos pueden tener pocos resultados
+
 ### Error de conexión
-Si obtienes errores de conexión, verifica:
-- Tu conexión a internet
-- Que no estés siendo bloqueado por hacer demasiadas peticiones (aumenta el `delay`)
+- Verifica tu conexión a internet
+- Semantic Scholar API tiene alta disponibilidad
 
-### No se encuentran resultados
-- Verifica que la consulta de búsqueda sea correcta
-- Prueba con términos de búsqueda diferentes
+## Migración desde Web Scraping
 
-### Estructura HTML ha cambiado
-Google Scholar puede cambiar la estructura de su HTML. Si los resultados no se extraen correctamente, el módulo puede necesitar actualizaciones.
+Este proyecto migró de web scraping a API oficial para:
+- ✅ Eliminar bloqueos de IP
+- ✅ Obtener datos más completos y confiables  
+- ✅ Mejorar velocidad y estabilidad
+- ✅ Acceso a filtros avanzados (años, tipos, etc.)
+
+Los archivos del sistema anterior están en la carpeta `legacy/`.
 
 ## Contribuir
 
 Las contribuciones son bienvenidas. Por favor:
 1. Haz un fork del proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)  
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
@@ -197,4 +225,4 @@ Este proyecto es de código abierto y está disponible para uso educativo y de i
 
 ## Disclaimer
 
-Este proyecto es solo para propósitos educativos. El uso de web scraping debe cumplir con los términos de servicio del sitio web objetivo. Google Scholar tiene políticas sobre el uso automatizado de su servicio.
+Este proyecto utiliza la API pública de Semantic Scholar. Respeta los términos de uso de la API y las buenas prácticas de investigación académica.
